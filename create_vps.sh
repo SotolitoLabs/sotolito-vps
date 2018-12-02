@@ -11,7 +11,8 @@ VPS_IMAGE_DIR="$OCI_IMAGE_BASE/$VPS_NAME"
 
 echo "Creating ${VPS_NAME} OCI Bundle on ${VPS_IMAGE_DIR}"
 mkdir $VPS_IMAGE_DIR
-ln -s $OCI_IMAGE_DIR/rootfs $VPS_IMAGE_DIR/.
+# TODO: Check a how to reuse the rootfs
+cp -rp $OCI_IMAGE_DIR/rootfs $VPS_IMAGE_DIR/.
 cp -rp $OCI_IMAGE_DIR/rootfs/etc $VPS_IMAGE_DIR/.
 cp -rp $OCI_IMAGE_DIR/rootfs/var $VPS_IMAGE_DIR/.
 cp -rp $OCI_IMAGE_DIR/rootfs/home $VPS_IMAGE_DIR/.
