@@ -1,0 +1,58 @@
+#!/bin/bash
+
+
+# Control VPS containers
+# Iván Chavero <ichavero@chavero.com.mx>
+
+RUNC="/usr/bin/runc"
+VPS_BASE="/home/vservers"
+OCI_IMAGE_BASE="/home/vservers/OCI-Image-Bundles"
+OCI_IMAGE_DIR="${OCI_IMAGE_BASE}/sotolito-vps-base"
+VPS_IMAGE_DIR="$OCI_IMAGE_BASE/$VPS_NAME"
+
+
+#TODO use getops
+COMMAND="$1"
+VPS_NAME="$2"
+
+# Stop VPS container
+# (for some reason we have to send SIGKILL)
+function stop_vps {
+	$RUNC exec $1 shutdown -h now
+	$RUNC kill $1 KILL
+}
+
+# Start VPS container
+function start_vps {
+	CONTAINER_DIR="${OCI_IMAGE_BASE}/${1}"
+	if [ ! -d $CONTAINER_DIR ]; then
+		echo "Container $1 OCI bundle does not exist"
+		exit
+	fi
+	cd $CONTAINER_DIR
+	$RUNC --systemd-cgroup --debug run $1
+}
+
+case "$COMMAND" in 
+	start)
+		echo "Starting VPS $VPS_NAME"
+		start_vps $VPS_NAME
+		;;
+	stop)
+		echo "Stopping VPS $VPS_NAME"
+		stop_vps $VPS_NAME
+		;;
+	restart)
+		echo "Restart VPS $VPS_NAME"
+		echo "Stopping VPS $VPS_NAME"
+		stop_vps $VPS_NAME
+		echo "Starting VPS $VPS_NAME"
+		start_vps $VPS_NAME
+		;;
+	*)
+		echo "Usage: $0 start|stop|restart VPS_NAME"
+		exit
+esac
+
+
+
