@@ -4,6 +4,9 @@
 # Control VPS containers
 # Iván Chavero <ichavero@chavero.com.mx>
 
+#TODO use getops
+COMMAND="$1"
+VPS_NAME="$2"
 RUNC="/usr/bin/runc"
 VPS_BASE="/home/vservers"
 OCI_IMAGE_BASE="/home/vservers/OCI-Image-Bundles"
@@ -11,9 +14,28 @@ OCI_IMAGE_DIR="${OCI_IMAGE_BASE}/sotolito-vps-base"
 VPS_IMAGE_DIR="$OCI_IMAGE_BASE/$VPS_NAME"
 
 
-#TODO use getops
-COMMAND="$1"
-VPS_NAME="$2"
+
+
+# Create VPS using runc containers 
+function create_vps {
+	echo "Creating ${VPS_NAME} OCI Bundle on ${VPS_IMAGE_DIR}"
+	mkdir $VPS_IMAGE_DIR
+	# TODO: Check a how to reuse the rootfs
+	cp -rp $OCI_IMAGE_DIR/rootfs $VPS_IMAGE_DIR/.
+	cp -rp $OCI_IMAGE_DIR/rootfs/etc $VPS_IMAGE_DIR/.
+	cp -rp $OCI_IMAGE_DIR/rootfs/var $VPS_IMAGE_DIR/.
+	cp -rp $OCI_IMAGE_DIR/rootfs/home $VPS_IMAGE_DIR/.
+	cp $OCI_IMAGE_DIR/config-template.json $VPS_IMAGE_DIR/config.json
+	sed -i "s,<VPS_ETC_DIR>,$VPS_IMAGE_DIR/etc," $VPS_IMAGE_DIR/config.json
+	sed -i "s,<VPS_VAR_DIR>,$VPS_IMAGE_DIR/var," $VPS_IMAGE_DIR/config.json
+	sed -i "s,<VPS_HOME_DIR>,$VPS_IMAGE_DIR/home," $VPS_IMAGE_DIR/config.json
+
+	#echo "Creating systemd Unit"
+	#ln -s /usr/lib/systemd/system/sotolito-vps@.service /etc/systemd/system/sotolito-vps.target.wants/sotolito-vps@${VPS_NAME}.service
+
+	echo "Done"
+}
+
 
 # Stop VPS container
 # (for some reason we have to send SIGKILL)
@@ -30,10 +52,15 @@ function start_vps {
 		exit
 	fi
 	cd $CONTAINER_DIR
-	$RUNC --systemd-cgroup --debug run $1
+	$RUNC --systemd-cgroup --debug --log /dev/stdin run $1
 }
 
+
 case "$COMMAND" in 
+	create)
+		echo "Creating VPS $VPS_NAME"
+		create_vps $VPS_NAME
+		;;
 	start)
 		echo "Starting VPS $VPS_NAME"
 		start_vps $VPS_NAME
