@@ -7,6 +7,7 @@
 #TODO use getops
 COMMAND="$1"
 VPS_NAME="$2"
+VPS_STATIC_IP="$3"
 RUNC="/usr/bin/runc"
 VPS_BASE="/home/vservers"
 OCI_IMAGE_BASE="/home/vservers/OCI-Image-Bundles"
@@ -29,9 +30,12 @@ function create_vps {
 	sed -i "s,<VPS_ETC_DIR>,$VPS_IMAGE_DIR/etc," $VPS_IMAGE_DIR/config.json
 	sed -i "s,<VPS_VAR_DIR>,$VPS_IMAGE_DIR/var," $VPS_IMAGE_DIR/config.json
 	sed -i "s,<VPS_HOME_DIR>,$VPS_IMAGE_DIR/home," $VPS_IMAGE_DIR/config.json
+	sed -i "s,<VPS_STATIC_IP>,$VPS_STATIC_IP," $VPS_IMAGE_DIR/config.json
 
-	#echo "Creating systemd Unit"
-	#ln -s /usr/lib/systemd/system/sotolito-vps@.service /etc/systemd/system/sotolito-vps.target.wants/sotolito-vps@${VPS_NAME}.service
+	echo "Enabling systemd Unit"
+	ln -s /usr/lib/systemd/system/sotolito-vps@.service /etc/systemd/system/sotolito-vps.target.wants/sotolito-vps@${VPS_NAME}.service
+	systemctl enable sotolito-vps@${VPS_NAME}.service
+	systemctl start sotolito-vps@${VPS_NAME}.service
 
 	echo "Done"
 }
@@ -42,6 +46,16 @@ function create_vps {
 function stop_vps {
 	$RUNC exec $1 shutdown -h now
 	$RUNC kill $1 KILL
+	#TODO: check how not to delete the container
+        STATUS=$(runc list | grep running)
+	while [ "${STATUS}" != "" ]; do
+        	echo -ne "Status: ${STATUS}\r"
+        	STATUS=$(runc list | grep running)
+	done
+        echo -ne "\r"
+	$RUNC delete $1
+	echo ""
+	echo "$1 succesfully stopped"
 }
 
 # Start VPS container
@@ -52,7 +66,8 @@ function start_vps {
 		exit
 	fi
 	cd $CONTAINER_DIR
-	$RUNC --systemd-cgroup --debug --log /dev/stdin run $1
+	#TODO add option to use foreground?
+	$RUNC --systemd-cgroup --debug --log /dev/stdin run -d $1
 }
 
 
