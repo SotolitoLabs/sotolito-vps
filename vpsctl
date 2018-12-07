@@ -19,6 +19,7 @@ VPS_IMAGE_DIR="$OCI_IMAGE_BASE/$VPS_NAME"
 
 # Create VPS using runc containers 
 function create_vps {
+	WANTS_DIR="/etc/systemd/system/sotolito-vps.target.wants"
 	echo "Creating ${VPS_NAME} OCI Bundle on ${VPS_IMAGE_DIR}"
 	mkdir $VPS_IMAGE_DIR
 	# TODO: Check a how to reuse the rootfs
@@ -32,8 +33,14 @@ function create_vps {
 	sed -i "s,<VPS_HOME_DIR>,$VPS_IMAGE_DIR/home," $VPS_IMAGE_DIR/config.json
 	sed -i "s,<VPS_STATIC_IP>,$VPS_STATIC_IP," $VPS_IMAGE_DIR/config.json
 
+	cp $OCI_IMAGE_DIR/systemd/sotolito-vps-base.cfg ${WANTS_DIR}/${VPS_NAME}.cfg
+
+	sed -i "s,<VPS_STATIC_IP>,$VPS_STATIC_IP," ${WANTS_DIR}/${VPS_NAME}.cfg
+	sed -i "s,<VPS_NET>,sotolito-vps," ${WANTS_DIR}/${VPS_NAME}.cfg
+	sed -i "s,<VPS_DIR>,$VPS_IMAGE_DIR," ${WANTS_DIR}/${VPS_NAME}.cfg
+
 	echo "Enabling systemd Unit"
-	ln -s /usr/lib/systemd/system/sotolito-vps@.service /etc/systemd/system/sotolito-vps.target.wants/sotolito-vps@${VPS_NAME}.service
+	ln -s /usr/lib/systemd/system/sotolito-vps@.service ${WANTS_DIR}/sotolito-vps@${VPS_NAME}.service
 	systemctl enable sotolito-vps@${VPS_NAME}.service
 	systemctl start sotolito-vps@${VPS_NAME}.service
 
