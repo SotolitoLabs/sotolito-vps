@@ -22,16 +22,22 @@ function generate_bundle {
 		echo "$OCI_IMAGE_DIR directory already exists! aborting..."
 		exit
 	fi
-	mkdir -p ${OCI_IMAGE_DIR}/rootfs
+	mkdir -p $OCI_IMAGE_DIR/rootfs
 	cd $OCI_IMAGE_DIR
 	docker export $(docker create $OCI_IMAGE_NAME) | tar -C rootfs -xvf -
-	cp templates/config-template.json ${OCI_IMAGE_DIR}/rootfs/.
+	cp templates/config-template.json $OCI_IMAGE_DIR/rootfs/.
 	echo "Done"
 }
 
 # Delete OCI image bundle
 function delete_bundle {
-	#TODO
+	if [ ! -d $OCI_IMAGE_DIR ]; then
+		echo "$OCI_IMAGE_DIR directory already exists! aborting..."
+		exit
+	fi
+	echo "Deleting $OCI_IMAGE_DIR"
+	rm -rf $OCI_IMAGE_DIR
+	echo "Done"
 }
 
 
