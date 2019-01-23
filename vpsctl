@@ -90,6 +90,12 @@ function enter_vps {
 	runc exec -t $1 /bin/bash
 }
 
+# List VPSs
+function list_vps {
+	runc list
+}
+
+
 
 case "$COMMAND" in 
 	create)
@@ -115,6 +121,12 @@ case "$COMMAND" in
 		echo "Starting shell inside $VPS_NAME"
 		enter_vps $VPS_NAME
 		;;
+	list)
+		echo "VPS in $HOSTNAME"
+		echo
+		list_vps $VPS_NAME
+		;;
+
 	*)
 		echo "Usage: $0 start|stop|restart|enter VPS_NAME"
 		exit
