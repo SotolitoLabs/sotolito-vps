@@ -118,11 +118,11 @@ case "$COMMAND" in
 		start_vps $VPS_NAME
 		;;
 	enter)
-		echo "Starting shell inside $VPS_NAME"
+		echo "Starting shell inside $VPS_NAME VPS"
 		enter_vps $VPS_NAME
 		;;
 	list)
-		echo "VPS in $HOSTNAME"
+		echo "VPSs in $HOSTNAME"
 		echo
 		list_vps $VPS_NAME
 		;;
