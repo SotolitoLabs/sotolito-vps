@@ -43,7 +43,10 @@ function create_vps {
 	ln -s /usr/lib/systemd/system/sotolito-vps@.service ${WANTS_DIR}/sotolito-vps@${VPS_NAME}.service
 	systemctl enable sotolito-vps@${VPS_NAME}.service
 	systemctl start sotolito-vps@${VPS_NAME}.service
-
+	
+	#Open SSH port
+	# firewall-cmd --permanent --zone="public" --add-forward-port=port=2000:proto=tcp:toport=22:toaddr=$VPS_STATIC_IP
+	# firewall-cmd --reload
 	echo "Done"
 }
 
@@ -82,6 +85,11 @@ function start_vps {
 	fi
 }
 
+# Enter VPS shell
+function enter_vps {
+	runc exec -t $1 /bin/bash
+}
+
 
 case "$COMMAND" in 
 	create)
@@ -103,8 +111,13 @@ case "$COMMAND" in
 		echo "Starting VPS $VPS_NAME"
 		start_vps $VPS_NAME
 		;;
+	enter)
+		echo "Starting shell inside $VPS_NAME"
+		stop_vps $VPS_NAME
+		;;
+
 	*)
-		echo "Usage: $0 start|stop|restart VPS_NAME"
+		echo "Usage: $0 start|stop|restart|enter VPS_NAME"
 		exit
 esac
 
