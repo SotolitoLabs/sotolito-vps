@@ -113,9 +113,8 @@ case "$COMMAND" in
 		;;
 	enter)
 		echo "Starting shell inside $VPS_NAME"
-		stop_vps $VPS_NAME
+		enter_vps $VPS_NAME
 		;;
-
 	*)
 		echo "Usage: $0 start|stop|restart|enter VPS_NAME"
 		exit
