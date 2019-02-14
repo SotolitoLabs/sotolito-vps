@@ -57,10 +57,10 @@ function stop_vps {
 	$RUNC exec $1 shutdown -h now
 	$RUNC kill $1 KILL
 	#TODO: check how not to delete the container
-        STATUS=$(runc list | grep running)
+        STATUS=$(runc list 2> /dev/null | grep $1)
 	while [ "${STATUS}" != "" ]; do
         	echo -ne "Status: ${STATUS}\r"
-        	STATUS=$(runc list | grep running)
+        	STATUS=$(runc list 2> /dev/null | grep $1)
 	done
         echo -ne "\r"
 	$RUNC delete $1
