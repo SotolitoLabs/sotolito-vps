@@ -1,0 +1,52 @@
+- hosts: all
+  vars:
+    server_name: 'sotolitolabs.com'
+    guest_name: 'Sotolito VPS GUEST'
+    #mysql_root_password: prueba123
+  tasks:
+  - name: Install Packages needed for wordpres service
+    action: package name={{item}} state=installed
+    with_items:
+      - nginx
+      - php-fpm
+      - mariadb
+      - wordpress
+  # TODO update mysql password
+  #- name: update mysql root password for all root accounts
+  #  mysql_user:
+  #    name: root
+  #    host: 127.0.0.1
+  #    password: "{{ mysql_root_password }}"
+  #    login_user: root
+  #    login_password: "{{ mysql_root_password }}"
+  #    check_implicit_admin: yes
+  #    priv: "*.*:ALL,GRANT"
+
+  #- name: Create a New Test DB called MyNewDB
+  #   mysql_db: name=MyNewDB state=present login_user=root login_password={{ mysql_root_password }}
+  - name: Copy nginx PHP FPM settings
+    copy:
+      src: ../config/nginx/conf.d/php-fpm.conf
+      dest: /etc/nginx/conf.d/php-fpm.conf
+      mode: 644
+  - name: Configure default nginx settings
+    template:
+      src: ../config/nginx/nginx.conf.j2
+      dest: /etc/nginx/nginx.conf
+      mode: 644
+  - name: Copy nginx PHP FPM settings
+    copy:
+      src: ../config/nginx/conf.d/php-fpm.conf
+      dest: /etc/nginx/conf.d/php-fpm.conf
+      mode: 644
+  - name: Configure Wordpress
+    template:
+      src: ../config/nginx/conf.d/wordpress.conf.j2
+      dest: /etc/nginx/conf.d/{{ server_name }}.conf
+  - name: Start and enable mysql server
+    service: name=mariadb state=started enabled=true
+  - name: Start and enable nginx
+    service: name=nginx state=started enabled=true
+  - name: Start and enable php-fpm
+    service: name=php-fpm state=started enabled=true
+
