@@ -39,6 +39,11 @@
       src: nginx/conf.d/php-fpm.conf
       dest: /etc/nginx/conf.d/php-fpm.conf
       mode: 644
+  - name: Copy PHP FPM settings
+    copy:
+      src: php-fpm.d/www.conf
+      dest: /etc/php-fpm.d/www.conf
+      mode: 644
   - name: Configure Wordpress
     template:
       src: nginx/conf.d/wordpress.conf.j2
