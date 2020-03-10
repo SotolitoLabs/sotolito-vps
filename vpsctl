@@ -13,14 +13,25 @@ VPS_BASE="/home/vservers"
 OCI_IMAGE_BASE="/home/vservers/OCI-Image-Bundles"
 OCI_IMAGE_DIR="${OCI_IMAGE_BASE}/sotolito-vps-base"
 VPS_IMAGE_DIR="$OCI_IMAGE_BASE/$VPS_NAME"
+IP_INFO_FILE=${OCI_IMAGE_BASE}/vps-info/vps-hosts
 
 
 
 
 # Create VPS using runc containers 
 function create_vps {
+	# If we don't get the IP from the command line, get it from the info file
+        if [[ "${VPS_STATIC_IP}" == "" ]]; then
+                last_ip=$(tail -1 ${IP_INFO_FILE} | cut -d ' ' -f 1)
+                base_addr=$(echo $last_ip | cut -d. -f1-3)
+                last_oct=$(echo $last_ip | cut -d. -f4)
+                last_oct=$(($last_oct + 1))
+                VPS_STATIC_IP="${base_addr}.${last_oct}"
+        fi
+
+
 	WANTS_DIR="/etc/systemd/system/sotolito-vps.target.wants"
-	echo "Creating ${VPS_NAME} OCI Bundle on ${VPS_IMAGE_DIR}"
+	echo "Creating ${VPS_NAME} OCI Bundle on ${VPS_IMAGE_DIR} with ${VPS_STATIC_IP} address"
 	mkdir $VPS_IMAGE_DIR
 	# TODO: Check a how to reuse the rootfs
 	cp -rp $OCI_IMAGE_DIR/rootfs $VPS_IMAGE_DIR/.
@@ -47,6 +58,7 @@ function create_vps {
 	#Open SSH port
 	# firewall-cmd --permanent --zone="public" --add-forward-port=port=2000:proto=tcp:toport=22:toaddr=$VPS_STATIC_IP
 	# firewall-cmd --reload
+        echo "${VPS_STATIC_IP} ${VPS_NAME}" >> ${IP_INFO_FILE}
 	echo "Done"
 }
 
