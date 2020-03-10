@@ -59,6 +59,7 @@ function create_vps {
 	# firewall-cmd --permanent --zone="public" --add-forward-port=port=2000:proto=tcp:toport=22:toaddr=$VPS_STATIC_IP
 	# firewall-cmd --reload
         echo "${VPS_STATIC_IP} ${VPS_NAME}" >> ${IP_INFO_FILE}
+        echo "${VPS_STATIC_IP}" > $VPS_IMAGE_DIR/.ip
 	echo "Done"
 }
 
