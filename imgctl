@@ -3,17 +3,14 @@
 
 # Control OCI images
 # Iván Chavero <ichavero@chavero.com.mx>
-# TODO: stop using docker
 
+BASE_DIR=$(dirname $0)
 #TODO use getops
 COMMAND="$1"
 OCI_IMAGE_NAME="$2"
 RUNC="/usr/bin/runc"
 OCI_IMAGE_BASE="/home/vservers/OCI-Image-Bundles"
 OCI_IMAGE_DIR="${OCI_IMAGE_BASE}/${OCI_IMAGE_NAME}"
-
-
-
 
 # Generate image from a docker container
 function generate_bundle {
@@ -23,9 +20,9 @@ function generate_bundle {
 		exit
 	fi
 	mkdir -p $OCI_IMAGE_DIR/rootfs
+	cp $BASE_DIR/templates/config-template.json $OCI_IMAGE_DIR/
 	cd $OCI_IMAGE_DIR
 	podman export $(podman create $OCI_IMAGE_NAME) | tar -C rootfs -xvf -
-	cp templates/config-template.json $OCI_IMAGE_DIR/rootfs/.
 	echo "Done"
 }
 
