@@ -24,7 +24,7 @@ function generate_bundle {
 	fi
 	mkdir -p $OCI_IMAGE_DIR/rootfs
 	cd $OCI_IMAGE_DIR
-	docker export $(docker create $OCI_IMAGE_NAME) | tar -C rootfs -xvf -
+	podman export $(podman create $OCI_IMAGE_NAME) | tar -C rootfs -xvf -
 	cp templates/config-template.json $OCI_IMAGE_DIR/rootfs/.
 	echo "Done"
 }
