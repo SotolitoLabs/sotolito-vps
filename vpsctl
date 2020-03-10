@@ -128,7 +128,7 @@ case "$COMMAND" in
 		;;
 
 	*)
-		echo "Usage: $0 start|stop|restart|enter|list VPS_NAME"
+		echo "Usage: $0 create|start|stop|restart|enter|list VPS_NAME <IP>"
 		exit
 esac
 
