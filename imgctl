@@ -20,7 +20,9 @@ function generate_bundle {
 		exit
 	fi
 	mkdir -p $OCI_IMAGE_DIR/rootfs
+	mkdir -p $OCI_IMAGE_DIR/systemd
 	cp $BASE_DIR/templates/config-template.json $OCI_IMAGE_DIR/
+	cp -rp $BASE_DIR/systemd/sotolito-vps-base.cfg $OCI_IMAGE_DIR/systemd/
 	cd $OCI_IMAGE_DIR
 	podman export $(podman create $OCI_IMAGE_NAME) | tar -C rootfs -xvf -
 	echo "Done"
