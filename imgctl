@@ -18,7 +18,7 @@ OCI_IMAGE_DIR="${OCI_IMAGE_BASE}/${OCI_IMAGE_NAME}"
 # Generate image from a docker container
 function generate_bundle {
 	#TODO
-	if [ ! -d $OCI_IMAGE_DIR ]; then
+	if [ -d "${OCI_IMAGE_DIR}" ]; then
 		echo "$OCI_IMAGE_DIR directory already exists! aborting..."
 		exit
 	fi
@@ -31,8 +31,8 @@ function generate_bundle {
 
 # Delete OCI image bundle
 function delete_bundle {
-	if [ ! -d $OCI_IMAGE_DIR ]; then
-		echo "$OCI_IMAGE_DIR directory already exists! aborting..."
+	if [ ! -d "${OCI_IMAGE_DIR}" ]; then
+		echo "$OCI_IMAGE_DIR directory does not exist! aborting..."
 		exit
 	fi
 	echo "Deleting $OCI_IMAGE_DIR"
