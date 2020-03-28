@@ -24,3 +24,4 @@ cat privkey.pem > haproxy_fullchain.pem
 cat fullchain.pem >> haproxy_fullchain.pem
 cd $HAPROXY_SSL
 ln -sf $LETSENCRYPT_BASE/$DOMAIN/haproxy_fullchain.pem $DOMAIN
+systemctl restart haproxy
