@@ -23,4 +23,4 @@ cd $LETSENCRYPT_BASE/$DOMAIN
 cat privkey.pem > haproxy_fullchain.pem
 cat fullchain.pem >> haproxy_fullchain.pem
 cd $HAPROXY_SSL
-ln -s $LETSENCRYPT_BASE/$DOMAIN/haproxy_fullchain.pem $DOMAIN
+ln -sf $LETSENCRYPT_BASE/$DOMAIN/haproxy_fullchain.pem $DOMAIN
