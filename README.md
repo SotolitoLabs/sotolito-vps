@@ -3,6 +3,12 @@ Manage VPS using OCI containers, podman and systemd.
 
 ## Installation
 
+Create the VPS directory
+
+```console
+mkdir -p /home/vservers/OCI-Image-Bundles/utils/bin
+```
+
 ### Install `netns` a utility to create bridges for OCI containers
 
 ```console
@@ -10,23 +16,24 @@ Manage VPS using OCI containers, podman and systemd.
 $ export NETNS_SHA256="be81bc3fa68c7c9892a0b84e6429e2af5be58e74474f0dcddad78647dd741ce7"
 
 # Download and check the sha256sum.
-$ sudo curl -fSL "https://github.com/genuinetools/netns/releases/download/v0.5.3/netns-linux-386" -o "/usr/local/bin/netns" \
-	&& echo "${NETNS_SHA256}  /usr/local/bin/netns" | sha256sum -c - \
-	&& chmod a+x "/usr/local/bin/netns"
+$ sudo curl -fSL "https://github.com/genuinetools/netns/releases/download/v0.5.3/netns-linux-386" \
+  -o "/home/vservers/OCI-Image-Bundles/utils/bin/netns" \
+  && echo "${NETNS_SHA256}  /home/vservers/OCI-Image-Bundles/utils/bin/netns" | sha256sum -c - \
+  && chmod a+x "/home/vservers/OCI-Image-Bundles/utils/bin/netns"
 ```
 
 ### Clone this repo to get the `vpsctl` and `imagectl` commands.
 
 ```console
+$ cd /home/vservers/OCI-Image-Bundles/utils
 $ git clone https://github.com/SotolitoLabs/sotolito-vps.git
 ```
 
 Add the repo to the path or copy the `vpsctl` and `imagectl` commands to `/usr/local/bin`.
 
 ```console
-# export PATH=$PATH:<path_to>/sotolito-vps
+# export PATH=$PATH:/home/vservers/OCI-Image-Bundles/utils/sotolito-vps
 ```
-
 
 ## Usage
 
@@ -96,6 +103,7 @@ Images are extracted from OCI container images stored in any public or private r
 
 ```console
 # imgctl generate centos:stream9
+# ln -s  centos\:stream9 sotolito-vps-base
 ```
 
 
