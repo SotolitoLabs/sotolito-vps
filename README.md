@@ -17,9 +17,20 @@ $ sudo curl -fSL "https://github.com/genuinetools/netns/releases/download/v0.5.3
 
 ### Clone this repo to get the `vpsctl` and `imagectl` commands.
 
+```console
+$ git clone https://github.com/SotolitoLabs/sotolito-vps.git
+```
+
+Add the repo to the path or copy the `vpsctl` and `imagectl` commands to `/usr/local/bin`.
+
+```console
+# export PATH=$PATH:<path_to>/sotolito-vps
+```
 
 
 ## Usage
+
+This commands should be executed as the root user.
 
 ### Create a VPS
 
@@ -79,12 +90,20 @@ To open the SSH port using firewalld
 ```
 
 
-## Create Images
+## Create Image Templates
 
 Images are extracted from OCI container images stored in any public or private registry.
 
-### 
+```console
+# imgctl generate centos:stream9
+```
 
+
+# TODO
+
+* Open ports from the `vpsctl` command
+* Kata containers
+* Feed the image as parameter of the create command
 
 # References
 
