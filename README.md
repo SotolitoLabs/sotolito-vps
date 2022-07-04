@@ -35,6 +35,29 @@ Add the repo to the path or copy the `vpsctl` and `imagectl` commands to `/usr/l
 # export PATH=$PATH:/home/vservers/OCI-Image-Bundles/utils/sotolito-vps
 ```
 
+## Quick Start
+
+Follow the install instructions.
+
+### Create image template
+
+```console
+# imgctl generate centos:stream9
+# ln -s  centos\:stream9 sotolito-vps-base
+```
+
+## Create VPS
+```console
+# vpsctl create sotolito
+```
+
+## Enable and start VPS
+
+```console
+# systemctl enable sotolito-vps@sotolito
+# systemct start sotolito-vps@sotolito
+```
+
 ## Usage
 
 This commands should be executed as the root user.
