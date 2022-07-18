@@ -108,6 +108,11 @@ function list_vps {
 	runc list
 }
 
+# Get VPS ip
+function get_ip {
+	firewall-cmd --list-forward | grep $(cat /etc/vservers/${1}/.ip)
+}
+
 
 
 case "$COMMAND" in 
@@ -139,9 +144,14 @@ case "$COMMAND" in
 		echo
 		list_vps $VPS_NAME
 		;;
+	get_ip)
+		echo -n "IP Address for $HOSTNAME"
+		echo
+		get_ip $VPS_NAME
+		;;
 
 	*)
-		echo "Usage: $0 create|start|stop|restart|enter|list VPS_NAME <IP>"
+		echo "Usage: $0 create|start|stop|restart|enter|list|get_ip VPS_NAME <IP>"
 		exit
 esac
 
