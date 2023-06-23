@@ -19,6 +19,7 @@ $ export NETNS_SHA256="be81bc3fa68c7c9892a0b84e6429e2af5be58e74474f0dcddad78647d
 $ sudo curl -fSL "https://github.com/genuinetools/netns/releases/download/v0.5.3/netns-linux-386" \
   -o "/home/vservers/OCI-Image-Bundles/utils/bin/netns" \
   && echo "${NETNS_SHA256}  /home/vservers/OCI-Image-Bundles/utils/bin/netns" | sha256sum -c - \
+  && mkdir -p /home/vservers/OCI-Image-Bundles/utils/bin \
   && chmod a+x "/home/vservers/OCI-Image-Bundles/utils/bin/netns"
 ```
 
@@ -27,6 +28,12 @@ $ sudo curl -fSL "https://github.com/genuinetools/netns/releases/download/v0.5.3
 ```console
 $ cd /home/vservers/OCI-Image-Bundles/utils
 $ git clone https://github.com/SotolitoLabs/sotolito-vps.git
+```
+Setup systemd
+```
+# cp /home/vservers/OCI-Image-Bundles/utils/sotolito-vps/systemd/sotolito-vps@.service /usr/lib/systemd/system/
+# mkdir /etc/systemd/system/sotolito-vps.target.wants
+# systemctl daemon-reload
 ```
 
 Add the repo to the path or copy the `vpsctl` and `imagectl` commands to `/usr/local/bin`.
