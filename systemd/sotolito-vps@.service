@@ -1,8 +1,10 @@
 [Unit]
 Description=Sotolito VPS %i
 After=network.target
- 
+
 [Service]
+User=vps
+Group=vps
 Slice=machine.slice
 Delegate=true
 CPUWeight=100
@@ -10,10 +12,10 @@ MemoryLimit=512M
 #TimeoutSec=300
 EnvironmentFile=/etc/systemd/system/sotolito-vps.target.wants/%i.cfg
 ExecStart=/home/vservers/OCI-Image-Bundles/utils/sotolito-vps/vpsctl start %i
-ExecStop=/home/vservers/OCI-Image-Bundles/utils/sotolito-vps/vpsctl stop %i 
+ExecStop=/home/vservers/OCI-Image-Bundles/utils/sotolito-vps/vpsctl stop %i
 KillMode=mixed
 Restart=always
 RestartSec=10s
- 
+
 [Install]
 WantedBy=multi-user.target
