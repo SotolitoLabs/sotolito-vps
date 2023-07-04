@@ -15,11 +15,17 @@ OCI_IMAGE_DIR="${OCI_IMAGE_BASE}/sotolito-vps-base"
 VPS_IMAGE_DIR="$OCI_IMAGE_BASE/$VPS_NAME"
 IP_INFO_FILE=${OCI_IMAGE_BASE}/vps-info/vps-hosts
 RUN_DIR="/run/vps"
-
+VPS_USER="vps"
+VPS_GROUP="vps"
 
 
 # Create VPS using runc containers
 function create_vps {
+  # Make sure that the RUN_DIR exists
+  if [[ ! -d $RUN_DIR ]]; then
+    mkdir $RUN_DIR
+    chown ${VPS_USER}:${VPS_GROUP} $RUN_DIR
+  fi
 	# If we don't get the IP from the command line, get it from the info file
   if [[ "${VPS_STATIC_IP}" == "" ]]; then
     last_ip=$(tail -1 ${IP_INFO_FILE} | cut -d ' ' -f 1)
