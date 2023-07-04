@@ -55,7 +55,7 @@ Follow the install instructions.
 
 ## Create VPS
 ```console
-# vpsctl create sotolito
+# vpsctl create sotolito 10.0.0.1
 ```
 
 ## Enable and start VPS
