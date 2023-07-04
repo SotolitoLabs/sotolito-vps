@@ -23,6 +23,8 @@ $ sudo curl -fSL "https://github.com/genuinetools/netns/releases/download/v0.5.3
   && chmod a+x "/home/vservers/OCI-Image-Bundles/utils/bin/netns"
 ```
 
+If you're using CentOS you have to enable the `centos-extras` repo to install `oci-register-machine` hook.
+
 ### Clone this repo to get the `vpsctl` and `imagectl` commands.
 
 ```console
