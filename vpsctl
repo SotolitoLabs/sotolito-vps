@@ -97,12 +97,12 @@ function start_vps {
 	cd $CONTAINER_DIR
 	if [ "${VPS_EXEC_MODE}" == "systemd" ]; then
 		echo "Starting $1 VPS in systemd mode"
-		$RUNC --systemd-cgroup --log /dev/stdin run --pid-file $CONTAINER_DIR/$1.pid \
-      --root $RUN_DIR $1
+		$RUNC --root $RUN_DIR--systemd-cgroup --log /dev/stdin run \
+      --pid-file $CONTAINER_DIR/$1.pid $1
 	else
 		echo "Starting $1 VPS in standalone mode"
-		$RUNC --systemd-cgroup --log /dev/stdin run -d --pid-file $CONTAINER_DIR/$1.pid \
-      --root $RUN_DIR $1
+		$RUNC --root $RUN_DIR --systemd-cgroup --log /dev/stdin run -d \
+      --pid-file $CONTAINER_DIR/$1.pid $1
 	fi
 }
 
