@@ -102,7 +102,7 @@ function start_vps {
   else
     echo "Starting $1 VPS in standalone mode"
     $RUNC --root $RUN_DIR --systemd-cgroup --log /dev/stdin --rootless true \
-      start -d --pid-file $CONTAINER_DIR/$1.pid $1
+      start --pid-file $CONTAINER_DIR/$1.pid $1
   fi
 }
 
