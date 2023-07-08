@@ -8,7 +8,7 @@
 COMMAND="$1"
 VPS_NAME="$2"
 VPS_STATIC_IP="$3"
-RUNC="/usr/bin/runc"
+RUNC="/usr/bin/crun"
 VPS_BASE="/home/vservers"
 OCI_IMAGE_BASE="/home/vservers/OCI-Image-Bundles"
 OCI_IMAGE_DIR="${OCI_IMAGE_BASE}/sotolito-vps-base"
@@ -26,7 +26,7 @@ function create_vps {
     mkdir $RUN_DIR
     chown ${VPS_USER}:${VPS_GROUP} $RUN_DIR
   fi
-	# If we don't get the IP from the command line, get it from the info file
+  # If we don't get the IP from the command line, get it from the info file
   if [[ "${VPS_STATIC_IP}" == "" ]]; then
     last_ip=$(tail -1 ${IP_INFO_FILE} | cut -d ' ' -f 1)
     base_addr=$(echo $last_ip | cut -d. -f1-3)
@@ -36,131 +36,131 @@ function create_vps {
   fi
 
 
-	WANTS_DIR="/etc/systemd/system/sotolito-vps.target.wants"
-	echo "Creating ${VPS_NAME} OCI Bundle on ${VPS_IMAGE_DIR} with ${VPS_STATIC_IP} address"
-	mkdir $VPS_IMAGE_DIR
-	# TODO: Check a how to reuse the rootfs
-	cp -rp $OCI_IMAGE_DIR/rootfs $VPS_IMAGE_DIR/.
-	cp -rp $OCI_IMAGE_DIR/rootfs/etc $VPS_IMAGE_DIR/.
-	cp -rp $OCI_IMAGE_DIR/rootfs/var $VPS_IMAGE_DIR/.
-	cp -rp $OCI_IMAGE_DIR/rootfs/home $VPS_IMAGE_DIR/.
-	cp $OCI_IMAGE_DIR/config-template.json $VPS_IMAGE_DIR/config.json
-	sed -i "s,<VPS_ETC_DIR>,$VPS_IMAGE_DIR/etc," $VPS_IMAGE_DIR/config.json
-	sed -i "s,<VPS_VAR_DIR>,$VPS_IMAGE_DIR/var," $VPS_IMAGE_DIR/config.json
-	sed -i "s,<VPS_HOME_DIR>,$VPS_IMAGE_DIR/home," $VPS_IMAGE_DIR/config.json
-	sed -i "s,<VPS_STATIC_IP>,$VPS_STATIC_IP," $VPS_IMAGE_DIR/config.json
+  WANTS_DIR="/etc/systemd/system/sotolito-vps.target.wants"
+  echo "Creating ${VPS_NAME} OCI Bundle on ${VPS_IMAGE_DIR} with ${VPS_STATIC_IP} address"
+  mkdir $VPS_IMAGE_DIR
+  # TODO: Check a how to reuse the rootfs
+  cp -rp $OCI_IMAGE_DIR/rootfs $VPS_IMAGE_DIR/.
+  cp -rp $OCI_IMAGE_DIR/rootfs/etc $VPS_IMAGE_DIR/.
+  cp -rp $OCI_IMAGE_DIR/rootfs/var $VPS_IMAGE_DIR/.
+  cp -rp $OCI_IMAGE_DIR/rootfs/home $VPS_IMAGE_DIR/.
+  cp $OCI_IMAGE_DIR/config-template.json $VPS_IMAGE_DIR/config.json
+  sed -i "s,<VPS_ETC_DIR>,$VPS_IMAGE_DIR/etc," $VPS_IMAGE_DIR/config.json
+  sed -i "s,<VPS_VAR_DIR>,$VPS_IMAGE_DIR/var," $VPS_IMAGE_DIR/config.json
+  sed -i "s,<VPS_HOME_DIR>,$VPS_IMAGE_DIR/home," $VPS_IMAGE_DIR/config.json
+  sed -i "s,<VPS_STATIC_IP>,$VPS_STATIC_IP," $VPS_IMAGE_DIR/config.json
 
-	cp $OCI_IMAGE_DIR/systemd/sotolito-vps-base.cfg ${WANTS_DIR}/${VPS_NAME}.cfg
+  cp $OCI_IMAGE_DIR/systemd/sotolito-vps-base.cfg ${WANTS_DIR}/${VPS_NAME}.cfg
 
-	sed -i "s,<VPS_STATIC_IP>,$VPS_STATIC_IP," ${WANTS_DIR}/${VPS_NAME}.cfg
-	sed -i "s,<VPS_NET>,sotolito-vps," ${WANTS_DIR}/${VPS_NAME}.cfg
-	sed -i "s,<VPS_DIR>,$VPS_IMAGE_DIR," ${WANTS_DIR}/${VPS_NAME}.cfg
+  sed -i "s,<VPS_STATIC_IP>,$VPS_STATIC_IP," ${WANTS_DIR}/${VPS_NAME}.cfg
+  sed -i "s,<VPS_NET>,sotolito-vps," ${WANTS_DIR}/${VPS_NAME}.cfg
+  sed -i "s,<VPS_DIR>,$VPS_IMAGE_DIR," ${WANTS_DIR}/${VPS_NAME}.cfg
 
-	echo "Enabling systemd Unit"
-	ln -s /usr/lib/systemd/system/sotolito-vps@.service ${WANTS_DIR}/sotolito-vps@${VPS_NAME}.service
-	systemctl enable sotolito-vps@${VPS_NAME}.service
-	systemctl start sotolito-vps@${VPS_NAME}.service
+  echo "Enabling systemd Unit"
+  ln -s /usr/lib/systemd/system/sotolito-vps@.service ${WANTS_DIR}/sotolito-vps@${VPS_NAME}.service
+  systemctl enable sotolito-vps@${VPS_NAME}.service
+  systemctl start sotolito-vps@${VPS_NAME}.service
 
-	#Open SSH port
-	# firewall-cmd --permanent --zone="public" --add-forward-port=port=2000:proto=tcp:toport=22:toaddr=$VPS_STATIC_IP
-	# firewall-cmd --reload
+  #Open SSH port
+  # firewall-cmd --permanent --zone="public" --add-forward-port=port=2000:proto=tcp:toport=22:toaddr=$VPS_STATIC_IP
+  # firewall-cmd --reload
         echo "${VPS_STATIC_IP} ${VPS_NAME}" >> ${IP_INFO_FILE}
         echo "${VPS_STATIC_IP}" > $VPS_IMAGE_DIR/.ip
-	echo "Done"
+  echo "Done"
 }
 
 
 # Stop VPS container
 # (for some reason we have to send SIGKILL)
 function stop_vps {
-	$RUNC exec $1 shutdown -h now
-	$RUNC kill $1 KILL
-	#TODO: check how not to delete the container
+  $RUNC exec $1 shutdown -h now
+  $RUNC kill $1 KILL
+  #TODO: check how not to delete the container
         STATUS=$(runc list 2> /dev/null | grep $1)
-	while [[ "${STATUS}"  != "" && "${STATUS}" != *"stopped"* ]]; do
-        	echo -ne "Status: ${STATUS}\r"
-        	STATUS=$(runc list 2> /dev/null | grep $1)
-	done
+  while [[ "${STATUS}"  != "" && "${STATUS}" != *"stopped"* ]]; do
+          echo -ne "Status: ${STATUS}\r"
+          STATUS=$(runc list 2> /dev/null | grep $1)
+  done
         echo -ne "\r"
-	$RUNC delete $1
-	echo ""
-	echo "$1 succesfully stopped"
+  $RUNC delete $1
+  echo ""
+  echo "$1 succesfully stopped"
 }
 
 # Start VPS container
 function start_vps {
-	CONTAINER_DIR="${OCI_IMAGE_BASE}/${1}"
-	if [ ! -d $CONTAINER_DIR ]; then
-		echo "Container $1 OCI bundle does not exist"
-		exit
-	fi
-	cd $CONTAINER_DIR
-	if [ "${VPS_EXEC_MODE}" == "systemd" ]; then
-		echo "Starting $1 VPS in systemd mode"
-		$RUNC --root $RUN_DIR --systemd-cgroup --log /dev/stdin --rootless true \
+  CONTAINER_DIR="${OCI_IMAGE_BASE}/${1}"
+  if [ ! -d $CONTAINER_DIR ]; then
+    echo "Container $1 OCI bundle does not exist"
+    exit
+  fi
+  cd $CONTAINER_DIR
+  if [ "${VPS_EXEC_MODE}" == "systemd" ]; then
+    echo "Starting $1 VPS in systemd mode"
+    $RUNC --root $RUN_DIR --systemd-cgroup --log /dev/stdin --rootless true \
       run --pid-file $CONTAINER_DIR/$1.pid $1
-	else
-		echo "Starting $1 VPS in standalone mode"
-		$RUNC --root $RUN_DIR --systemd-cgroup --log /dev/stdin --rootless true \
+  else
+    echo "Starting $1 VPS in standalone mode"
+    $RUNC --root $RUN_DIR --systemd-cgroup --log /dev/stdin --rootless true \
       run -d --pid-file $CONTAINER_DIR/$1.pid $1
-	fi
+  fi
 }
 
 # Enter VPS shell
 function enter_vps {
-	runc exec -t $1 /bin/bash
+  runc exec -t $1 /bin/bash
 }
 
 # List VPSs
 function list_vps {
-	runc list
+  runc list
 }
 
 # Get VPS ip
 function get_ip {
-	firewall-cmd --list-forward | grep $(cat /etc/vservers/${1}/.ip)
+  firewall-cmd --list-forward | grep $(cat /etc/vservers/${1}/.ip)
 }
 
 
 
 case "$COMMAND" in
-	create)
-		echo "Creating VPS $VPS_NAME"
-		create_vps $VPS_NAME
-		;;
-	start)
-		echo "Starting VPS $VPS_NAME"
-		start_vps $VPS_NAME
-		;;
-	stop)
-		echo "Stopping VPS $VPS_NAME"
-		stop_vps $VPS_NAME
-		;;
-	restart)
-		echo "Restart VPS $VPS_NAME"
-		echo "Stopping VPS $VPS_NAME"
-		stop_vps $VPS_NAME
-		echo "Starting VPS $VPS_NAME"
-		start_vps $VPS_NAME
-		;;
-	enter)
-		echo "Starting shell inside $VPS_NAME VPS"
-		enter_vps $VPS_NAME
-		;;
-	list)
-		echo "VPSs in $HOSTNAME"
-		echo
-		list_vps $VPS_NAME
-		;;
-	get_ip)
-		echo -n "IP Address for $HOSTNAME"
-		echo
-		get_ip $VPS_NAME
-		;;
+  create)
+    echo "Creating VPS $VPS_NAME"
+    create_vps $VPS_NAME
+    ;;
+  start)
+    echo "Starting VPS $VPS_NAME"
+    start_vps $VPS_NAME
+    ;;
+  stop)
+    echo "Stopping VPS $VPS_NAME"
+    stop_vps $VPS_NAME
+    ;;
+  restart)
+    echo "Restart VPS $VPS_NAME"
+    echo "Stopping VPS $VPS_NAME"
+    stop_vps $VPS_NAME
+    echo "Starting VPS $VPS_NAME"
+    start_vps $VPS_NAME
+    ;;
+  enter)
+    echo "Starting shell inside $VPS_NAME VPS"
+    enter_vps $VPS_NAME
+    ;;
+  list)
+    echo "VPSs in $HOSTNAME"
+    echo
+    list_vps $VPS_NAME
+    ;;
+  get_ip)
+    echo -n "IP Address for $HOSTNAME"
+    echo
+    get_ip $VPS_NAME
+    ;;
 
-	*)
-		echo "Usage: $0 create|start|stop|restart|enter|list|get_ip VPS_NAME <IP>"
-		exit
+  *)
+    echo "Usage: $0 create|start|stop|restart|enter|list|get_ip VPS_NAME <IP>"
+    exit
 esac
 
 
