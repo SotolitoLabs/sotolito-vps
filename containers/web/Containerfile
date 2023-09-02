@@ -1,0 +1,19 @@
+FROM sotolito-vps-base:latest
+
+ENV SOTOLITO_CENTOS_VPS_VERSION=9.0.0\
+    SUMMARY="SotolitoLabs Centos 9 VPS for Web" \
+    DESCRIPTION="Centos 9 Image for SotlitoVPS"
+
+LABEL summary="$SUMMARY" \
+      description="$DESCRIPTION" \
+      io.k8s.description="$DESCRIPTION" \
+      io.k8s.display-name="SotolitoOS centos 9" \
+      name="sotolito/sotolito-vps-web" \
+      version="9.0.0" \
+      usage="vpsctl start vps_name" \
+      maintainer="Iván Chavero <ichavero@chavero.com.mx>"
+
+RUN set -eux                                     && \
+    dnf install -y nginx                       && \
+    dnf clean all
+
