@@ -13,7 +13,7 @@ LABEL summary="$SUMMARY" \
       usage="vpsctl start vps_name" \
       maintainer="Iván Chavero <ichavero@chavero.com.mx>"
 
-RUN set -eux                                     && \
-    dnf install -y nginx sudo selinux-policy     && \
+RUN set -eux                                          && \
+    dnf install -y nginx sudo selinux-policy iproute  && \
     dnf clean all
 
