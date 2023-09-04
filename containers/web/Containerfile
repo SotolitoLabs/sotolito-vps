@@ -1,4 +1,4 @@
-FROM sotolito-vps-base:latest
+FROM localhost/sotolito-vps-base:1.0.0-centos9
 
 ENV SOTOLITO_CENTOS_VPS_VERSION=9.0.0\
     SUMMARY="SotolitoLabs Centos 9 VPS for Web" \
@@ -14,6 +14,6 @@ LABEL summary="$SUMMARY" \
       maintainer="Iván Chavero <ichavero@chavero.com.mx>"
 
 RUN set -eux                                     && \
-    dnf install -y nginx                       && \
+    dnf install -y nginx sudo                    && \
     dnf clean all
 
