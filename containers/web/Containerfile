@@ -14,7 +14,7 @@ LABEL summary="$SUMMARY" \
       maintainer="Iván Chavero <ichavero@chavero.com.mx>"
 
 RUN set -eux                                          && \
-    dnf groupinstall -y core base                     && \
+    dnf groupinstall --allowerasing -y core base      && \
     dnf install -y nginx sudo selinux-policy iproutei && \
     dnf clean all
 
