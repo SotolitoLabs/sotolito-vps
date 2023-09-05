@@ -13,9 +13,9 @@ LABEL summary="$SUMMARY" \
       usage="vpsctl start vps_name" \
       maintainer="Iván Chavero <ichavero@chavero.com.mx>"
 
-RUN set -eux                                      && \
-    echo "nameserver 8.8.8.8" > /etc/resolv.conf  && \
-    dnf groupinstall --allowerasing -y core       && \
-    dnf install -y openssh-server openssh-clients && \
+RUN set -eux                                                  && \
+    echo "nameserver 8.8.8.8" > /etc/resolv.conf              && \
+    dnf groupinstall --allowerasing -y core                   && \
+    dnf install -y openssh-server openssh-clients initscripts && \
     dnf clean all
 
