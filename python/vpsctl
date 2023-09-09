@@ -22,7 +22,20 @@ def show(name):
     click.echo(f"Show: {name}")
     conn = libvirt.open(LIBVIRT_SYSTEM)
     dom = conn.lookupByName(name)
-    print(f"Domain:\n{dom.info()}")
+    show_domain(dom)
+
+
+@click.command()
+def list():
+    click.echo("List VPS Containers")
+    conn = libvirt.open(LIBVIRT_SYSTEM)
+    for id in conn.listDomainsID():
+        domain = conn.lookupByID(id)
+        show_domain(domain)
+
+
+def show_domain(domain):
+    print(f"Domain:\n{domain.info()}")
 
 
 @click.group(name="vps", invoke_without_command=True)
