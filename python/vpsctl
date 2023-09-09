@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+
+# vpsctl
+
+import sys
+from jinja2 import Environment, FileSystemLoader
+import libvirt
+import click
+
+VERSION = "0.0.1"
+LIBVIRT_SYSTEM = "lxc:///system"
+
+
+def create_domain(name):
+    env = Environment(loader=FileSystemLoader("templates/"))
+    template = env.get_template("vps-template.xml")
+
+
+@click.command()
+@click.argument('name')
+def show(name):
+    click.echo(f"Show: {name}")
+    conn = libvirt.open(LIBVIRT_SYSTEM)
+    dom = conn.lookupByName(name)
+    print(f"Domain:\n{dom.info()}")
+
+
+@click.group(name="vps", invoke_without_command=True)
+@click.pass_context
+@click.option('--version', '-v', is_flag=True,
+              help='Show program version .')
+def main(ctx: click.Context, version):
+    if version:
+        print_version()
+        exit(0)
+    if ctx.invoked_subcommand is None:
+        click.echo("No VPS command specified.")
+
+
+def print_version():
+    click.echo(f"Version: {VERSION}")
+
+
+main.add_command(show)
+
+if __name__ == "__main__":
+    main()
