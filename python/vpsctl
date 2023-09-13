@@ -6,15 +6,53 @@ import sys
 from jinja2 import Environment, FileSystemLoader
 import libvirt
 import click
+# TODO import NetworkManager
 
 VERSION = "0.0.1"
 LIBVIRT_SYSTEM = "lxc:///system"
+VPS_BASE_PATH="/home/vservers/OCI-Image-Bundles"
+
+def generate_nm_connection(name):
+    vps_dir = f"VPS_BASE_PATH/{name}"
+    options = f"""
+                connection add type ethernet
+                con-name lxc-vps
+                ipv4.addresses 192.168.122.2/24 ipv4.dns 192.168.122.1
+                ipv4.method manual >
+                {vps_dir}/etc/NetworkManager/system-connections/lxc-vps.nmconnection
+            """
 
 
+    result = subprocess.run(
+        ["/usr/bin/nmcli", "--offline", options], capture_output=True, text=True
+    )
 def create_domain(name):
     env = Environment(loader=FileSystemLoader("templates/"))
     template = env.get_template("vps-template.xml")
+    vps_dir = f"{VPS_BASE_PATH}/{name}"
+    memory = 512
+    output = template.render(name=name,
+                    vps_dir=vps_dir,
+                    memory=memory)
+    print(f"TEMPLATE: {output}")
+    # nm_connection = {
+    #     'connection': {'id': 'nm-example-connection',
+    #                    'type': '802-11-wireless',
+    #                     'uuid': str(uuid.uuid4())},
+    #                     'ipv4': {
+    #                             'address-data': {
+    #                            }
+    #                            'addresses':
+    #                    },
+#}
+    # NetworkManager.Settings.AddConnectionUnsaved(nm_connection)
+    generate_nm_connection("sotolito")
 
+
+@click.command()
+@click.argument('name')
+def create(name):
+    create_domain(name)
 
 @click.command()
 @click.argument('name')
@@ -25,8 +63,8 @@ def show(name):
     show_domain(dom)
 
 
-@click.command()
-def list():
+@click.command(name="list")
+def list_domains():
     click.echo("List VPS Containers")
     conn = libvirt.open(LIBVIRT_SYSTEM)
     for id in conn.listDomainsID():
@@ -35,7 +73,7 @@ def list():
 
 
 def show_domain(domain):
-    print(f"Domain:\n{domain.info()}")
+    print(f"{domain.name()}")
 
 
 @click.group(name="vps", invoke_without_command=True)
@@ -55,6 +93,8 @@ def print_version():
 
 
 main.add_command(show)
+main.add_command(list_domains)
+main.add_command(create)
 
 if __name__ == "__main__":
     main()

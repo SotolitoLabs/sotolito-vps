@@ -1,7 +1,7 @@
-<domain type='lxc'>
+<domain type='lxc' id='3419384'>
   <name>{{ name }}</name>
-  <memory unit='KiB'>524288</memory>
-  <currentMemory unit='KiB'>524288</currentMemory>
+  <memory unit='KiB'>{{ memory }}</memory>
+  <currentMemory unit='KiB'>{{ memory }}</currentMemory>
   <vcpu placement='static'>1</vcpu>
   <resource>
     <partition>/machine</partition>
@@ -26,30 +26,32 @@
   <on_poweroff>destroy</on_poweroff>
   <on_reboot>restart</on_reboot>
   <on_crash>destroy</on_crash>
-<devices>
+  <devices>
     <emulator>/usr/libexec/libvirt_lxc</emulator>
     <filesystem type='mount' accessmode='squash'>
-      <source dir='{{ base_dir }}/rootfs'/>
+      <source dir='{{ vps_dir }}/rootfs'/>
       <target dir='/'/>
     </filesystem>
     <filesystem type='mount' accessmode='squash'>
-      <source dir='{{ base_dir }}/etc'/>
+      <source dir='{{ vps_dir }}/etc'/>
       <target dir='/etc'/>
     </filesystem>
     <filesystem type='mount' accessmode='squash'>
-      <source dir='{{ base_dir }}/var'/>
+      <source dir='{{ vps_dir }}/var'/>
       <target dir='/var'/>
     </filesystem>
     <filesystem type='mount' accessmode='squash'>
-      <source dir='{{ base_dir }}/html'/>
+      <source dir='{{ vps_dir }}/html'/>
       <target dir='/usr/share/nginx/html'/>
     </filesystem>
     <filesystem type='mount' accessmode='squash'>
-      <source dir='{{ base_dir }}/home'/>
+      <source dir='{{ vps_dir }}/home'/>
       <target dir='/home'/>
     </filesystem>
     <interface type='network'>
-      <source network='default' bridge='virbr0'/>
+      <source network='servers' bridge='virbr1'/>
+      <target dev='vnet3'/>
+      <guest dev='eth0'/>
     </interface>
     <console type='pty' tty='/dev/pts/5'>
       <source path='/dev/pts/5'/>
@@ -58,3 +60,4 @@
     </console>
   </devices>
 </domain>
+
