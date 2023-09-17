@@ -6,26 +6,80 @@ import sys
 from jinja2 import Environment, FileSystemLoader
 import libvirt
 import click
+import subprocess
+import shutil
+
 # TODO import NetworkManager
 
 VERSION = "0.0.1"
 LIBVIRT_SYSTEM = "lxc:///system"
 VPS_BASE_PATH="/home/vservers/OCI-Image-Bundles"
+VPS_TEMPLATE_DIR = f"{VPS_BASE_PATH}/sotolito-vps-web:1.0.0-centos9"
 
 def generate_nm_connection(name):
+    netmask = "24"
+    dns = "192.168.122.1"
     vps_dir = f"VPS_BASE_PATH/{name}"
-    options = f"""
-                connection add type ethernet
-                con-name lxc-vps
-                ipv4.addresses 192.168.122.2/24 ipv4.dns 192.168.122.1
-                ipv4.method manual >
-                {vps_dir}/etc/NetworkManager/system-connections/lxc-vps.nmconnection
-            """
-
+    ip_address = get_next_ip()
 
     result = subprocess.run(
-        ["/usr/bin/nmcli", "--offline", options], capture_output=True, text=True
+        ["/usr/bin/nmcli",
+         "--offline",
+         "connection",
+         "add",
+         "type",
+         "ethernet",
+         "con-name",
+         "lxc-vps",
+         "ipv4.addresses",
+         f"{ip_address}/{netmask}",
+         "ipv4.dns",
+         dns,
+         "ipv4.method",
+         "manual"],
+         text=True,
+         stdout=subprocess.PIPE
     )
+    print(f"Res: {result.stdout}")
+    return result.stdout
+
+
+def copy_vps_dir(vps_dir):
+    result = subprocess.run(
+        ["/usr/bin/cp",
+         "-rp",
+         VPS_TEMPLATE_DIR,
+         vps_dir],
+         text=True,
+         capture_output=True
+    )
+    if result.returncode != 0:
+        print(f"Error creating VPS directory: {result.stderr}")
+    print(f"Res: {result.stdout}")
+    return result.stdout
+
+
+def write_nm_connection(vps_dir, conn_string):
+    nm_dir = f"{vps_dir}/etc/NetworkManager/system-connections"
+    nm_file = f"{nm_dir}/sotolito.nmconnection"
+    with open(nm_file, "w") as nm_fh:
+        nm_fh.write(conn_string)
+
+
+def get_next_ip():
+    with open(f"{VPS_BASE_PATH}/vps-info/last_ip") as ip_file:
+        last_ip = ip_file.readline()
+        parts = last_ip.rsplit(".", 1)
+        last_oct = int(parts[1]) + 1
+        return f"{parts[0]}.{last_oct}"
+
+
+
+def set_next_ip(ip_address):
+    with open(f"VPS_BASE_PATH/{name}", "w") as ip_file:
+        ip_file.write(ip_address)
+
+
 def create_domain(name):
     env = Environment(loader=FileSystemLoader("templates/"))
     template = env.get_template("vps-template.xml")
@@ -46,7 +100,11 @@ def create_domain(name):
     #                    },
 #}
     # NetworkManager.Settings.AddConnectionUnsaved(nm_connection)
-    generate_nm_connection("sotolito")
+    print("Creating VPS directory")
+    copy_vps_dir(vps_dir)
+    print("VPS directory created")
+    conn = generate_nm_connection("sotolito")
+    write_nm_connection(name, vps_dir)
 
 
 @click.command()
