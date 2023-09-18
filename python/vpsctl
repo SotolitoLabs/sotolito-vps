@@ -8,6 +8,7 @@ import libvirt
 import click
 import subprocess
 import shutil
+# TODO from spinners import Spinners
 
 # TODO import NetworkManager
 
@@ -16,11 +17,10 @@ LIBVIRT_SYSTEM = "lxc:///system"
 VPS_BASE_PATH="/home/vservers/OCI-Image-Bundles"
 VPS_TEMPLATE_DIR = f"{VPS_BASE_PATH}/sotolito-vps-web:1.0.0-centos9"
 
-def generate_nm_connection(name):
+def generate_nm_connection(name, ip_address):
     netmask = "24"
     dns = "192.168.122.1"
     vps_dir = f"VPS_BASE_PATH/{name}"
-    ip_address = get_next_ip()
 
     result = subprocess.run(
         ["/usr/bin/nmcli",
@@ -62,6 +62,7 @@ def copy_vps_dir(vps_dir):
 def write_nm_connection(vps_dir, conn_string):
     nm_dir = f"{vps_dir}/etc/NetworkManager/system-connections"
     nm_file = f"{nm_dir}/sotolito.nmconnection"
+    print(f"Creating nm file: {nm_file}")
     with open(nm_file, "w") as nm_fh:
         nm_fh.write(conn_string)
 
@@ -74,10 +75,13 @@ def get_next_ip():
         return f"{parts[0]}.{last_oct}"
 
 
-
-def set_next_ip(ip_address):
-    with open(f"VPS_BASE_PATH/{name}", "w") as ip_file:
+def update_vps_info(name, ip_address):
+    with open(f"VPS_BASE_PATH/vps-info/last_ip", "w") as ip_file:
         ip_file.write(ip_address)
+
+
+    with open(f"VPS_BASE_PATH/vps-info/vps-hosts", "a") as info_file:
+        info_file.write(f"{ip_address} {name}")
 
 
 def create_domain(name):
@@ -89,22 +93,13 @@ def create_domain(name):
                     vps_dir=vps_dir,
                     memory=memory)
     print(f"TEMPLATE: {output}")
-    # nm_connection = {
-    #     'connection': {'id': 'nm-example-connection',
-    #                    'type': '802-11-wireless',
-    #                     'uuid': str(uuid.uuid4())},
-    #                     'ipv4': {
-    #                             'address-data': {
-    #                            }
-    #                            'addresses':
-    #                    },
-#}
-    # NetworkManager.Settings.AddConnectionUnsaved(nm_connection)
     print("Creating VPS directory")
     copy_vps_dir(vps_dir)
     print("VPS directory created")
-    conn = generate_nm_connection("sotolito")
-    write_nm_connection(name, vps_dir)
+    ip_address = get_next_ip()
+    conn_string = generate_nm_connection("sotolito", ip_address)
+    write_nm_connection(vps_dir, conn_string)
+    update_vps_info(name, ip_address)
 
 
 @click.command()
