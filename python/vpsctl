@@ -154,14 +154,39 @@ def show(name):
     show_domain(dom)
 
 
+@click.command()
+@click.argument('name')
+def start(name):
+    """
+        Option to show VPS information
+    """
+
+    click.echo(f"Starting VPS LXC Container: {name}")
+    conn = libvirt.open(LIBVIRT_SYSTEM)
+    dom = conn.lookupByName(name)
+    dom.start()
+
+
 @click.command(name="list")
 def list_domains():
     """
         List VPS domains
     """
 
-    click.echo("List VPS Containers")
+    click.echo("VPS Containers")
+    print("-"*40)
     conn = libvirt.open(LIBVIRT_SYSTEM)
+
+    # List inactive domains
+    domain_names = conn.listDefinedDomains()
+    for n in domain_names:
+        print(f"{n:20}| Inactive")
+        # print("{:<20} | Inactive".format(n))
+
+    if domain_names is None:
+        print("No VPS domains defined")
+        sys.exit()
+
     for domain_id in conn.listDomainsID():
         domain = conn.lookupByID(domain_id)
         show_domain(domain)
@@ -172,7 +197,20 @@ def show_domain(domain):
         Show domain information
     """
 
-    print(f"{domain.name()}")
+    domain_states = [
+        "Undefined",
+        "Running",
+        "Blocked on resource",
+        "Paused",
+        "Shutting down",
+        "Off"
+        "Crashed",
+        "Suspended by guest power management"
+    ]
+
+    domain_info = domain.info()
+    domain_state = domain_states[domain_info[0]]
+    print(f"{domain.name():<20}| {domain_state}")
 
 
 @click.group(name="vps", invoke_without_command=True)
