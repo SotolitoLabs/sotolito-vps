@@ -1,26 +1,29 @@
 #!/usr/bin/env python3
 
+""" Manages LXC domains """
+
 # vpsctl
 
+import subprocess
 import sys
-from jinja2 import Environment, FileSystemLoader
 import libvirt
 import click
-import subprocess
-import shutil
+from jinja2 import Environment, FileSystemLoader
 # TODO from spinners import Spinners
 
 # TODO import NetworkManager
 
 VERSION = "0.0.1"
 LIBVIRT_SYSTEM = "lxc:///system"
-VPS_BASE_PATH="/home/vservers/OCI-Image-Bundles"
+VPS_BASE_PATH = "/home/vservers/OCI-Image-Bundles"
 VPS_TEMPLATE_DIR = f"{VPS_BASE_PATH}/sotolito-vps-web:1.0.0-centos9"
+DEBUG = True
 
-def generate_nm_connection(name, ip_address):
+
+def generate_nm_connection(ip_address):
+    """ Creates the content of the Network Manager connection """
     netmask = "24"
     dns = "192.168.122.1"
-    vps_dir = f"VPS_BASE_PATH/{name}"
 
     result = subprocess.run(
         ["/usr/bin/nmcli",
@@ -37,21 +40,24 @@ def generate_nm_connection(name, ip_address):
          dns,
          "ipv4.method",
          "manual"],
-         text=True,
-         stdout=subprocess.PIPE
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE
     )
     print(f"Res: {result.stdout}")
     return result.stdout
 
 
 def copy_vps_dir(vps_dir):
+    """ Copy the VPS template directory to the new VPS """
     result = subprocess.run(
         ["/usr/bin/cp",
          "-rp",
          VPS_TEMPLATE_DIR,
          vps_dir],
-         text=True,
-         capture_output=True
+        check=True,
+        text=True,
+        capture_output=True
     )
     if result.returncode != 0:
         print(f"Error creating VPS directory: {result.stderr}")
@@ -60,15 +66,24 @@ def copy_vps_dir(vps_dir):
 
 
 def write_nm_connection(vps_dir, conn_string):
+    """
+        Write the Network Manager connection string to the
+        connections location in the VPS
+    """
+
     nm_dir = f"{vps_dir}/etc/NetworkManager/system-connections"
     nm_file = f"{nm_dir}/sotolito.nmconnection"
     print(f"Creating nm file: {nm_file}")
-    with open(nm_file, "w") as nm_fh:
+    with open(nm_file, "w", encoding="utf8") as nm_fh:
         nm_fh.write(conn_string)
 
 
 def get_next_ip():
-    with open(f"{VPS_BASE_PATH}/vps-info/last_ip") as ip_file:
+    """
+        Get the next ip address available from the
+        last_ip file
+    """
+    with open(f"{VPS_BASE_PATH}/vps-info/last_ip", encoding="utf8") as ip_file:
         last_ip = ip_file.readline()
         parts = last_ip.rsplit(".", 1)
         last_oct = int(parts[1]) + 1
@@ -76,28 +91,42 @@ def get_next_ip():
 
 
 def update_vps_info(name, ip_address):
-    with open(f"VPS_BASE_PATH/vps-info/last_ip", "w") as ip_file:
+    """
+        Stores the ip address information to the control files:
+        VPS_BASE_PATH/vps-info/last_ip
+        VPS_BASE_PATH/vps-info/vps-hosts
+    """
+
+    with open(f"{VPS_BASE_PATH}/vps-info/last_ip", "w",
+              encoding="utf8") as ip_file:
         ip_file.write(ip_address)
 
-
-    with open(f"VPS_BASE_PATH/vps-info/vps-hosts", "a") as info_file:
+    with open(f"{VPS_BASE_PATH}/vps-info/vps-hosts", "a",
+              encoding="utf8") as info_file:
         info_file.write(f"{ip_address} {name}")
 
 
 def create_domain(name):
+    """
+        Creates a LXC VPS libvirt domain
+    """
+
     env = Environment(loader=FileSystemLoader("templates/"))
     template = env.get_template("vps-template.xml")
     vps_dir = f"{VPS_BASE_PATH}/{name}"
     memory = 512
-    output = template.render(name=name,
-                    vps_dir=vps_dir,
-                    memory=memory)
-    print(f"TEMPLATE: {output}")
+    domain_xml = template.render(name=name,
+                                 vps_dir=vps_dir,
+                                 memory=memory)
+    if DEBUG:
+        print(f"TEMPLATE: {domain_xml}")
+    conn = libvirt.open(LIBVIRT_SYSTEM)
+    conn.defineXML(domain_xml)
     print("Creating VPS directory")
     copy_vps_dir(vps_dir)
     print("VPS directory created")
     ip_address = get_next_ip()
-    conn_string = generate_nm_connection("sotolito", ip_address)
+    conn_string = generate_nm_connection(ip_address)
     write_nm_connection(vps_dir, conn_string)
     update_vps_info(name, ip_address)
 
@@ -105,11 +134,20 @@ def create_domain(name):
 @click.command()
 @click.argument('name')
 def create(name):
+    """
+        Option to create a VPS libvirt domain
+    """
+
     create_domain(name)
+
 
 @click.command()
 @click.argument('name')
 def show(name):
+    """
+        Option to show VPS information
+    """
+
     click.echo(f"Show: {name}")
     conn = libvirt.open(LIBVIRT_SYSTEM)
     dom = conn.lookupByName(name)
@@ -118,14 +156,22 @@ def show(name):
 
 @click.command(name="list")
 def list_domains():
+    """
+        List VPS domains
+    """
+
     click.echo("List VPS Containers")
     conn = libvirt.open(LIBVIRT_SYSTEM)
-    for id in conn.listDomainsID():
-        domain = conn.lookupByID(id)
+    for domain_id in conn.listDomainsID():
+        domain = conn.lookupByID(domain_id)
         show_domain(domain)
 
 
 def show_domain(domain):
+    """
+        Show domain information
+    """
+
     print(f"{domain.name()}")
 
 
@@ -134,14 +180,16 @@ def show_domain(domain):
 @click.option('--version', '-v', is_flag=True,
               help='Show program version .')
 def main(ctx: click.Context, version):
+    """ Entry point """
     if version:
         print_version()
-        exit(0)
+        sys.exit(0)
     if ctx.invoked_subcommand is None:
         click.echo("No VPS command specified.")
 
 
 def print_version():
+    """ Print program version """
     click.echo(f"Version: {VERSION}")
 
 
