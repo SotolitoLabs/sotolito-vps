@@ -1,7 +1,7 @@
-<domain type='lxc' id='3419384'>
+<domain type='lxc'>
   <name>{{ name }}</name>
-  <memory unit='KiB'>{{ memory }}</memory>
-  <currentMemory unit='KiB'>{{ memory }}</currentMemory>
+  <memory unit='KiB'>524288</memory>
+  <currentMemory unit='KiB'>524288</currentMemory>
   <vcpu placement='static'>1</vcpu>
   <resource>
     <partition>/machine</partition>
@@ -53,8 +53,7 @@
       <target dev='vnet3'/>
       <guest dev='eth0'/>
     </interface>
-    <console type='pty' tty='/dev/pts/5'>
-      <source path='/dev/pts/5'/>
+    <console type='pty'>
       <target type='lxc' port='0'/>
       <alias name='console0'/>
     </console>
