@@ -123,6 +123,16 @@ def update_vps_info(name, ip_address):
         info_file.write(f"{ip_address} {name}")
 
 
+def write_vps_xml(name, xml_domain):
+    """
+        Stores the XML domain for the VPS
+    """
+
+    with open(f"{VPS_BASE_PATH}/{name}/libvirt-domain.xml", "w",
+              encoding="utf8") as xml_file:
+        xml_file.write(xml_domain)
+
+
 def create_domain(name):
     """
         Creates a LXC VPS libvirt domain
@@ -145,6 +155,7 @@ def create_domain(name):
     ip_address = get_next_ip()
     conn_string = generate_nm_connection(ip_address)
     write_nm_connection(vps_dir, conn_string)
+    write_vps_xml(name, domain_xml)
     update_vps_info(name, ip_address)
 
 
