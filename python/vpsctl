@@ -65,6 +65,23 @@ def copy_vps_dir(vps_dir):
     return result.stdout
 
 
+def delete_vps_dir(vps_dir):
+    """ Delete the VPS directory """
+    print(f"Deleting VPS: {vps_dir} directory")
+    result = subprocess.run(
+        ["/usr/bin/rm",
+         "-rf",
+         vps_dir],
+        check=True,
+        text=True,
+        capture_output=True
+    )
+    if result.returncode != 0:
+        print(f"Error deleting VPS directory: {result.stderr}")
+    print(f"Res: {result.stdout}")
+    return result.stdout
+
+
 def write_nm_connection(vps_dir, conn_string):
     """
         Write the Network Manager connection string to the
@@ -143,15 +160,35 @@ def create(name):
 
 @click.command()
 @click.argument('name')
+def delete(name):
+    """
+        Option to delete VPS libvirt domain
+    """
+    click.echo(f"Deleting: {name}")
+    with libvirt.open(LIBVIRT_SYSTEM) as conn:
+        dom = conn.lookupByName(name)
+        # TODO add checks
+        try:
+            print(f"Domain {name} not running stopping")
+            dom.destroy()
+        except Exception:
+            print(f"Domain {name} is not running")
+        print(f"Deleting VPS: {name}")
+        dom.undefine()
+        delete_vps_dir(name)
+
+
+@click.command()
+@click.argument('name')
 def show(name):
     """
         Option to show VPS information
     """
 
     click.echo(f"Show: {name}")
-    conn = libvirt.open(LIBVIRT_SYSTEM)
-    dom = conn.lookupByName(name)
-    show_domain(dom)
+    with libvirt.open(LIBVIRT_SYSTEM) as conn:
+        dom = conn.lookupByName(name)
+        show_domain(dom)
 
 
 @click.command()
@@ -162,9 +199,14 @@ def start(name):
     """
 
     click.echo(f"Starting VPS LXC Container: {name}")
-    conn = libvirt.open(LIBVIRT_SYSTEM)
-    dom = conn.lookupByName(name)
-    dom.start()
+    with libvirt.open(LIBVIRT_SYSTEM) as conn:
+        dom = conn.lookupByName(name)
+        if not dom:
+            print(f"VPS {name} does not exist")
+            sys.exit(1)
+        if dom.create() < 0:
+            print(f"Could not start VPS {name}")
+            sys.exit(1)
 
 
 @click.command(name="list")
@@ -175,21 +217,20 @@ def list_domains():
 
     click.echo("VPS Containers")
     print("-"*40)
-    conn = libvirt.open(LIBVIRT_SYSTEM)
+    with libvirt.open(LIBVIRT_SYSTEM) as conn:
 
-    # List inactive domains
-    domain_names = conn.listDefinedDomains()
-    for n in domain_names:
-        print(f"{n:20}| Inactive")
-        # print("{:<20} | Inactive".format(n))
+        # List inactive domains
+        domain_names = conn.listDefinedDomains()
+        for n in domain_names:
+            print(f"{n:20}| Inactive")
 
-    if domain_names is None:
-        print("No VPS domains defined")
-        sys.exit()
+        if domain_names is None:
+            print("No VPS domains defined")
+            sys.exit()
 
-    for domain_id in conn.listDomainsID():
-        domain = conn.lookupByID(domain_id)
-        show_domain(domain)
+        for domain_id in conn.listDomainsID():
+            domain = conn.lookupByID(domain_id)
+            show_domain(domain)
 
 
 def show_domain(domain):
@@ -234,6 +275,8 @@ def print_version():
 main.add_command(show)
 main.add_command(list_domains)
 main.add_command(create)
+main.add_command(delete)
+main.add_command(start)
 
 if __name__ == "__main__":
     main()
