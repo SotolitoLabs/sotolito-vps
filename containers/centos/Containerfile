@@ -15,6 +15,7 @@ LABEL summary="$SUMMARY" \
 
 RUN set -eux                                                  && \
     echo "nameserver 8.8.8.8" > /etc/resolv.conf              && \
+    dnf update --allowerasing -y                              && \
     dnf groupinstall --allowerasing -y core                   && \
     dnf install -y openssh-server openssh-clients initscripts && \
     dnf clean all
